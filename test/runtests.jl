@@ -1,6 +1,12 @@
 using BiometricTables
 using Test
+using Aqua
 
 @testset "BiometricTables.jl" begin
-    # Write your tests here.
+    @testset "Qualidade do Código (Aqua.jl)" begin
+        Aqua.test_all(BiometricTables)
+    end
+    
+    # Seus outros testes do pacote entram aqui...
 end
+

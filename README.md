@@ -3,3 +3,4 @@
 [![Build Status](https://github.com/thfreud/BiometricTables.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/thfreud/BiometricTables.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/thfreud/BiometricTables.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/thfreud/BiometricTables.jl)
 [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
+[![Aqua QA](https://juliatesting.github.io/Aqua.jl/dev/assets/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
