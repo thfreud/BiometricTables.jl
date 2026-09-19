@@ -5,20 +5,20 @@
 [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
 [![Aqua QA](https://juliatesting.github.io/Aqua.jl/dev/assets/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
-> ⚠️ **Status do Projeto:** Em desenvolvimento ativo (`WIP`). As interfaces e APIs podem sofrer alterações até o lançamento da primeira versão estável (`v0.1.0`).
+> **Status do Projeto:** Em desenvolvimento ativo (`WIP`). As interfaces e APIs podem sofrer alterações até o lançamento da primeira versão estável (`v0.1.0`).
 
 O **`BiometricTables.jl`** é um pacote em Julia projetado para catalogar, manipular e consultar **tábuas biométricas atuariais**. Ele fornece estruturas de dados otimizadas e uma interface baseada em **múltiplo despacho** para gerenciar tanto tábuas de decremento único (mortalidade) quanto tábuas de múltiplos decrementos (mortalidade, invalidez, aposentadoria, desligamento/rotatividade).
 
 ---
 
-## 🛠️ Recursos Principais
+## Recursos Principais
 
 - **Hierarquia de Decrementos via Singletons:** Suporte extensível para causas de decremento (`Death`, `Disability`, `Retirement`, `Termination`).
 - **Conversão UDD Automática:** Construtor de fábrica para `MultiDecrementTable` que combina tábuas independentes ($q'_x$) em probabilidades dependentes ($q_x^{(d)}$) sob a hipótese de distribuição uniforme dos decrementos.
 
 ---
 
-## 🏛️ Estrutura do Domínio
+## Estrutura do Domínio
 
 - `AbstractBiometricTable`: Tipo abstrato base para todas as tábuas biométricas.
   - `MortalityTable`: Tábua de decremento único (mortalidade/invalidez individual). Acompanha metadados estruturados.
@@ -28,7 +28,7 @@ O **`BiometricTables.jl`** é um pacote em Julia projetado para catalogar, manip
 
 ---
 
-## 🚀 Exemplo Rápido de Uso
+## Exemplo Rápido de Uso
 
 ```julia
 using BiometricTables
