@@ -19,9 +19,9 @@ struct MortalityTable{M<:MetaData} <: AbstractBiometricTable
 end
 
 struct MultiDecrementTable{M<:MetaData} <: AbstractBiometricTable
+        ages::Vector{Int}
         mortality_probabilities::Vector{Float64}
         turnover_probabilities::Vector{Float64}
         retirement_probabilities::Vector{Float64}
         disability_probabilities::Vector{Float64}
-        metadata::M
 end
