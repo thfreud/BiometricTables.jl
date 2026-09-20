@@ -95,7 +95,7 @@ end
 """
     _convert_rates(rates_dict, ages, ::Val{:constant_force})
 
-Conversão via Fórmula (7.55) - Força Constante / Forças Proporcionais[cite: 3].
+Conversão via Fórmula (7.55) - Força Constante / Forças Proporcionais.
 """
 function _convert_rates(
     q_d::Vector{Float64}, q_t::Vector{Float64},
@@ -150,7 +150,7 @@ end
 
 Converte taxas independentes (q') em probabilidades dependentes (q) via a expansão 
 polinomial exata da integral sob a hipótese de Distribuição Uniforme de Decrementos (UDD) 
-aplicada individualmente a cada tábua associada (Fórmula 7.58 do Bowers/Dickson)[cite: 3].
+aplicada individualmente.
 """
 function _convert_rates(
     q_d::Vector{Float64}, q_t::Vector{Float64},
