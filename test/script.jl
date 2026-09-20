@@ -12,10 +12,10 @@ q_prime_retirement = [0.0000, 0.0000, 0.0000, 0.0100, 0.0500]
 q_prime_disability = [0.0005, 0.0006, 0.0008, 0.0010, 0.0012]
 
 # Instanciação das MortalityTables individuais
-mt_d = SingleDecrementTable(collect(test_ages), q_prime_death, MetaData("s", "s", "s", 2000), BiometricTables.Death())
-mt_t = SingleDecrementTable(collect(test_ages), q_prime_turnover, MetaData("s", "s", "s", 2000), BiometricTables.Termination())
-mt_r = SingleDecrementTable(collect(test_ages), q_prime_retirement, MetaData("s", "s", "s", 2000), BiometricTables.Retirement())
-mt_i = SingleDecrementTable(collect(test_ages), q_prime_disability, MetaData("s", "s", "s", 2000), BiometricTables.Disability())
+mt_d = SingleDecrementTable(collect(test_ages), q_prime_death, MetaData("s", "s", "s", 2000), BiometricTables.Death(), BiometricTables.Unisex())
+mt_t = SingleDecrementTable(collect(test_ages), q_prime_turnover, MetaData("s", "s", "s", 2000), BiometricTables.Termination(), BiometricTables.Unisex())
+mt_r = SingleDecrementTable(collect(test_ages), q_prime_retirement, MetaData("s", "s", "s", 2000), BiometricTables.Retirement(), BiometricTables.Male())
+mt_i = SingleDecrementTable(collect(test_ages), q_prime_disability, MetaData("s", "s", "s", 2000), BiometricTables.Disability(), BiometricTables.Unisex())
 
 # 2. Construção via UDD Individual (Expansão Polinomial Exata)
 mdt_udd = MultiDecrementTable(mt_d, mt_t, mt_r, mt_i, method = BiometricTables.UDDIndividual())

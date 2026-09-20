@@ -7,6 +7,7 @@ maximum_age(mt::SingleDecrementTable) = maximum(ages(mt))
 metadata(mt::SingleDecrementTable) = mt.metadata
 decrement(mt::SingleDecrementTable) = mt.decrement
 rates(mt::SingleDecrementTable) = mt.rates
+gender(mt::SingleDecrementTable) = mt.gender
 
 @inline function _age_index(mt::SingleDecrementTable, age::Int)
     idx = age - minimum_age(mt) + 1
@@ -40,6 +41,7 @@ end
 ages(mdt::MultiDecrementTable) = mdt.ages
 minimum_age(mdt::MultiDecrementTable) = minimum(ages(mdt))
 maximum_age(mdt::MultiDecrementTable) = maximum(ages(mdt))
+gender(mdt::MultiDecrementTable) = mdt.gender
 
 @inline function _age_index(mdt::MultiDecrementTable, age::Int)
     idx = age - minimum_age(mdt) + 1
@@ -93,9 +95,14 @@ end
 
 
 """
-    _convert_rates(rates_dict, ages, ::Val{:constant_force})
+    _convert_rates(
+    q_d::Vector{Float64}, q_t::Vector{Float64},
+    q_r::Vector{Float64}, q_i::Vector{Float64},
+    ::ConstantForce
+)
 
-Conversão via Fórmula (7.55) - Força Constante / Forças Proporcionais.
+Conversão de decrementos independentes para probabilidades decrementais utilizando hipótese
+de Força de Mortalidade Constante.
 """
 function _convert_rates(
     q_d::Vector{Float64}, q_t::Vector{Float64},
@@ -192,11 +199,15 @@ function MultiDecrementTable(
     dt_turnover::SingleDecrementTable,
     dt_retirement::SingleDecrementTable,
     dt_disability::SingleDecrementTable;
-    method::ConversionMethod = UDDIndividual()
+    method::ConversionMethod=UDDIndividual()
 )
     ages_d = ages(dt_death)
     if ages(dt_turnover) != ages_d || ages(dt_retirement) != ages_d || ages(dt_disability) != ages_d
         throw(ArgumentError("Todas as MortalityTables fornecidas devem possuir exatamente o mesmo intervalo de idades."))
+    end
+
+    if gender(dt_death) != gender(dt_turnover) || gender(dt_death) != gender(dt_retirement) || gender(dt_death) != gender(dt_disability)
+        @warn "As tábuas associadas possuem sexos/géneros distintos."
     end
 
     q_d = rates(dt_death)
@@ -211,6 +222,7 @@ function MultiDecrementTable(
         converted_rates[Death()],
         converted_rates[Termination()],
         converted_rates[Retirement()],
-        converted_rates[Disability()]
+        converted_rates[Disability()],
+        gender(dt_death)
     )
 end
