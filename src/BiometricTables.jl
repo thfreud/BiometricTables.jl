@@ -1,6 +1,8 @@
 module BiometricTables
 
-export px, survival, ages, minimum_age, maximum_age, metadata
+export px, qx, survival, ages, 
+minimum_age, maximum_age, metadata, 
+MultiDecrementTable, SingleDecrementTable, MetaData
 
 include("Interface.jl")
 
