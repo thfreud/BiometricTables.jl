@@ -6,8 +6,10 @@ DocMeta.setdocmeta!(BiometricTables, :DocTestSetup, :(using BiometricTables); re
 makedocs(;
     modules=[BiometricTables],
     authors="thfreud <thfreud@gmail.com> and contributors",
+    repo = "https://github.com/thfreud/BiometricTables.jl/blob/{commit}{path}#{line}",
     sitename="BiometricTables.jl",
     format=Documenter.HTML(;
+        prettyurls = get(ENV, "CI", "false") == "true",
         canonical="https://thfreud.github.io/BiometricTables.jl",
         edit_link="main",
         assets=String[],
