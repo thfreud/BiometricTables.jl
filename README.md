@@ -4,6 +4,7 @@
 [![Coverage](https://codecov.io/gh/thfreud/BiometricTables.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/thfreud/BiometricTables.jl)
 [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
 [![Aqua QA](https://juliatesting.github.io/Aqua.jl/dev/assets/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
+[![Docs (dev)](https://img.shields.io/badge/docs-dev-blue.svg)](https://seu-usuario.github.io/BiometricTables.jl/dev/)
 
 > **Status do Projeto:** Em desenvolvimento ativo (`WIP`). As interfaces e APIs podem sofrer alterações até o lançamento da primeira versão estável (`v0.1.0`).
 
