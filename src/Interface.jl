@@ -101,6 +101,7 @@ end
 
 Conversão de decrementos independentes para probabilidades decrementais utilizando hipótese
 de Força de Mortalidade Constante.
+\$\$ q_x^{(j)} = q_x^{s(j)}\\int_0^1\\prod_{i\\neq j}(1-tq_x^{s(j)})dt\$\$
 """
 function _convert_rates(
     q_d::Vector{Float64}, q_t::Vector{Float64},
