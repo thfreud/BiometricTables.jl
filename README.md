@@ -12,9 +12,7 @@ O **`BiometricTables.jl`** é um pacote em Julia projetado para catalogar, manip
 ---
 
 ## Recursos Principais
-
-- **Hierarquia de Decrementos via Singletons:** Suporte extensível para causas de decremento (`Death`, `Disability`, `Retirement`, `Termination`).
-- **Conversão UDD Automática:** Construtor de fábrica para `MultiDecrementTable` que combina tábuas independentes ($q'_x$) em probabilidades dependentes ($q_x^{(d)}$) sob a hipótese de distribuição uniforme dos decrementos.
+- **Conversão Automática:** Construtor de fábrica para `MultiDecrementTable` que combina tábuas independentes ($q'_x$) em probabilidades dependentes ($q_x^{(d)}$) sob a hipótese de distribuição uniforme dos decrementos ou de força de mortalidade constante. 
 
 ---
 
@@ -44,7 +42,7 @@ meta = MetaData(
 ages_vec = collect(18:115)
 rates_vec = [...] # Vetor de qx
 
-mt = SingleDecrementTable(rates_vec, ages_vec, meta, Death())
+mt = SingleDecrementTable(rates_vec, ages_vec, meta, Death(), Male())
 
 # Consultas básicas
 q_30 = qx(mt, 30)          # Taxa de mortalidade aos 30 anos
@@ -54,10 +52,10 @@ s_10 = survival(mt, 30, 10) # Probabilidade de sobreviver por 10 anos (10_p_30)
 # 2. Construção de Tábua de Múltiplos Decrementos
 mdt = MultiDecrementTable(
     collect(18:75),
-    Death()       => tabua_morte,
-    Termination() => tabua_rotatividade,
-    Retirement()  => tabua_aposentadoria,
-    Disability()  => tabua_invalidez
+    tabua_morte,
+    tabua_rotatividade,
+    tabua_aposentadoria,
+    tabua_invalidez
 )
 
 # Consulta por decremento específico q_x^(d)
