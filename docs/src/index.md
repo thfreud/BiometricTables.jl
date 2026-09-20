@@ -11,13 +11,7 @@ Bem-vindo à documentação do **BiometricTables.jl**, um pacote Julia para mani
 
 ## Referência de API
 
-```@docs
-MortalityTable
-MultiDecrementTable
-qx
-px
-survival
-```
+
 # BiometricTables
 
 Documentation for [BiometricTables](https://github.com/thfreud/BiometricTables.jl).
