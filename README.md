@@ -21,7 +21,7 @@ O **`BiometricTables.jl`** é um pacote em Julia projetado para catalogar, manip
 ## Estrutura do Domínio
 
 - `AbstractBiometricTable`: Tipo abstrato base para todas as tábuas biométricas.
-  - `MortalityTable`: Tábua de decremento único (mortalidade/invalidez individual). Acompanha metadados estruturados.
+  - `SingleDecrementTable`: Tábua de decremento único (mortalidade/invalidez individual). Acompanha metadados estruturados.
   - `MultiDecrementTable`: Tábua combinada para múltiplos decrementos simultâneos.
 - `AbstractDecrement`: Tipo abstrato para causas de saída.
   - `Death()`, `Disability()`, `Retirement()`, `Termination()`.
@@ -44,7 +44,7 @@ meta = MetaData(
 ages_vec = collect(18:115)
 rates_vec = [...] # Vetor de qx
 
-mt = MortalityTable(rates_vec, ages_vec, meta)
+mt = SingleDecrementTable(rates_vec, ages_vec, meta, Death())
 
 # Consultas básicas
 q_30 = qx(mt, 30)          # Taxa de mortalidade aos 30 anos

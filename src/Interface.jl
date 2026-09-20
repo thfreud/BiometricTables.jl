@@ -6,6 +6,7 @@ minimum_age(mt::SingleDecrementTable) = minimum(ages(mt))
 maximum_age(mt::SingleDecrementTable) = maximum(ages(mt))
 metadata(mt::SingleDecrementTable) = mt.metadata
 decrement(mt::SingleDecrementTable) = mt.decrement
+rates(mt::SingleDecrementTable) = mt.rates
 
 @inline function _age_index(mt::SingleDecrementTable, age::Int)
     idx = age - minimum_age(mt) + 1
@@ -182,7 +183,7 @@ end
     method::ConversionMethod = UDDIndividual()
 )
 
-Constrói uma `MultiDecrementTable` a partir de quatro tábuas de decremento único (associadas/independentes),
+Constrói uma `MultiDecrementTable` a partir de quatro tábuas de decremento único (independentes),
 convertendo as taxas \\(q'^{(j)}_x\\) em probabilidades dependentes \\(q^{(j)}_x\\) via o método especificado 
 (`UDDIndividual()` ou `ConstantForce()`).
 """
@@ -198,10 +199,10 @@ function MultiDecrementTable(
         throw(ArgumentError("Todas as MortalityTables fornecidas devem possuir exatamente o mesmo intervalo de idades."))
     end
 
-    q_d = dt_death.rates
-    q_t = dt_turnover.rates
-    q_r = dt_retirement.rates
-    q_i = dt_disability.rates
+    q_d = rates(dt_death)
+    q_t = rates(dt_turnover)
+    q_r = rates(dt_retirement)
+    q_i = rates(dt_disability)
 
     converted_rates = _convert_rates(q_d, q_t, q_r, q_i, method)
 
