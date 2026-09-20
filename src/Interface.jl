@@ -101,7 +101,10 @@ end
 
 Conversão de decrementos independentes para probabilidades decrementais utilizando hipótese
 de Força de Mortalidade Constante.
-\$\$q_x^{(j)} = q_x^{s(j)}\\int_0^1\\prod_{i\\neq j}(1-tq_x^{s(j)})dt\$\$
+
+\$\$
+    q_x^{(j)} = q_x^{s(j)}\\int_0^1\\prod_{i\\neq j}(1-tq_x^{s(j)})dt.
+\$\$
 """
 function _convert_rates(
     q_d::Vector{Float64}, q_t::Vector{Float64},
@@ -157,7 +160,10 @@ end
 Converte taxas independentes \$q'\$ em probabilidades dependentes \$q\$ via a expansão 
 polinomial exata da integral sob a hipótese de Distribuição Uniforme de Decrementos (UDD) 
 aplicada individualmente.
-\$\$q_x^{(j)} = q_x^(\\tau)\\frac{\\log(1-q_x^{s(j)})}{\\log(1-q_x^{\\tau})}\$\$.
+
+\$\$
+    q_x^{(j)} = q_x^{(\\tau)}\\frac{\\log(1-q_x^{s(j)})}{\\log(1-q_x^{\\tau})}.
+\$\$
 """
 function _convert_rates(
     q_d::Vector{Float64}, q_t::Vector{Float64},
