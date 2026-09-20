@@ -1,6 +1,4 @@
 # --- Interface para MortalityTable ---
-include("Types.jl")
-
 ages(mt::SingleDecrementTable) = mt.ages
 minimum_age(mt::SingleDecrementTable) = minimum(ages(mt))
 maximum_age(mt::SingleDecrementTable) = maximum(ages(mt))
