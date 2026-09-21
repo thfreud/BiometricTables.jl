@@ -23,9 +23,15 @@ px(mt::SingleDecrementTable, age::Int)::Float64 = 1.0 - qx(mt, age)
 """
     survival(mt::SingleDecrementTableble, age::Int, time::Int)::Float64
 
-Retorna a probabilidade de sobrevivência ``{_t}p_x`` ao longo de `time` anos.
+Retorna a probabilidade de sobrevivência ``{_t}p_x`` ao longo de `time` anos, implementada através da fórmula:
+```math
+{_t}p_{x} = \\prod_{k=0}^{t-1}p_{x+k}
+```
 """
 function survival(mt::SingleDecrementTable, age::Int, time::Int)::Float64
+    if age+time > maximum_age(mt)
+        throw(ArgumentError("Idade + time - 1 não podem ultrapassar o horizonte da tábua: $(maximum_age(mt))"))
+    end
     p = 1.0
     for t_age in 0:(time-1)
         p *= px(mt, age + t_age)
@@ -76,12 +82,21 @@ function qx(mdt::MultiDecrementTable, age::Int)::Float64
         qx(mdt, age, Disability())
 end
 
+"""
+    px(mdt::MultiDecrementTable, age::Int)::Float64
+
+Retorna a probabilidade de sobrevivência em ambiente multidecremental.
+"""
 px(mdt::MultiDecrementTable, age::Int)::Float64 = 1.0 - qx(mdt, age)
+
 
 """
     survival(mdt::MultiDecrementTable, age::Int, time::Int)::Float64
 
 Retorna a probabilidade de sobrevivência conjunta a todos os decrementos ao longo de `time` anos.
+```math
+{_t}p_{x}^{\\tau} = \\prod_{k=0}^{t-1}p_{x+k}^{\\tau}
+```
 """
 function survival(mdt::MultiDecrementTable, age::Int, time::Int)::Float64
     p = 1.0
@@ -92,20 +107,9 @@ function survival(mdt::MultiDecrementTable, age::Int, time::Int)::Float64
 end
 
 
-"""
-    _convert_rates(
-    q_d::Vector{Float64}, q_t::Vector{Float64},
-    q_r::Vector{Float64}, q_i::Vector{Float64},
-    ::ConstantForce
-)
+# Conversão de decrementos independentes para probabilidades decrementais utilizando hipótese
+# de Força de Mortalidade Constante.
 
-Conversão de decrementos independentes para probabilidades decrementais utilizando hipótese
-de Força de Mortalidade Constante.
-
-```math
-    q_x^{(j)} = q_x^{s(j)}\\int_0^1\\prod_{i\\neq j}(1-tq_x^{s(j)})dt.
-```
-"""
 function _convert_rates(
     q_d::Vector{Float64}, q_t::Vector{Float64},
     q_r::Vector{Float64}, q_i::Vector{Float64},
@@ -154,17 +158,10 @@ end
 end
 
 
-"""
-    _convert_rates(q_d, q_t, q_r, q_i, ::UDDIndividual)
 
-Converte taxas independentes \$q'\$ em probabilidades dependentes \$q\$ via a expansão 
-polinomial exata da integral sob a hipótese de Distribuição Uniforme de Decrementos (UDD) 
-aplicada individualmente.
-
-```math
-    q_x^{(j)} = q_x^{(\\tau)}\\frac{\\log(1-q_x^{s(j)})}{\\log(1-q_x^{\\tau})}.
-```
-"""
+#Converte taxas independentes \$q'\$ em probabilidades dependentes \$q\$ via a expansão 
+#polinomial exata da integral sob a hipótese de Distribuição Uniforme de Decrementos (UDD) 
+#aplicada individualmente.
 function _convert_rates(
     q_d::Vector{Float64}, q_t::Vector{Float64},
     q_r::Vector{Float64}, q_i::Vector{Float64},
@@ -199,6 +196,21 @@ end
 Constrói uma `MultiDecrementTable` a partir de quatro tábuas de decremento único (independentes),
 convertendo as taxas ``q'^{(j)}_x`` em probabilidades dependentes ``q^{(j)}_x`` via o método especificado 
 (`UDDIndividual()` ou `ConstantForce()`).
+## Conversão de Decrementos em Probabilidades
+A conversão de taxas decrementais indepentendentes para probabilidades em ambiente de múltiplos decrementos aceita dois métodos básicos.
+A Força de Mortalidade Constante também depende da hipótese UDD.
+
+- Força de Mortalidade Constante. `ConstantForce()`
+
+```math
+    q_x^{(j)} = q_x^{s(j)}\\int_0^1\\prod_{i\\neq j}(1-tq_x^{s(j)})dt.
+```
+
+- Distribuição Uniforme de Decrementos (UDD) `UDDIndividual`
+
+```math
+    q_x^{(j)} = q_x^{(\\tau)}\\frac{\\log(1-q_x^{s(j)})}{\\log(1-q_x^{\\tau})}.
+```
 """
 function MultiDecrementTable(
     dt_death::SingleDecrementTable,
