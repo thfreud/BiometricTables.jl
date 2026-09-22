@@ -54,10 +54,7 @@ gender(mdt::MultiDecrementTable) = mdt.gender
 end
 
 # Auxiliares para resolução de despacho por decremento
-@inline _rates(mdt::MultiDecrementTable, ::Death) = mdt.mortality_probabilities
-@inline _rates(mdt::MultiDecrementTable, ::Termination) = mdt.turnover_probabilities
-@inline _rates(mdt::MultiDecrementTable, ::Retirement) = mdt.retirement_probabilities
-@inline _rates(mdt::MultiDecrementTable, ::Disability) = mdt.disability_probabilities
+@inline _rates(mdt::MultiDecrementTable, d::AbstractDecrement) = mdt.rates[d]
 
 """
     qx(mdt::MultiDecrementTable, age::Int, d::AbstractDecrement)::Float64
@@ -73,13 +70,15 @@ end
 """
     qx(mdt::MultiDecrementTable, age::Int)::Float64
 
-Retorna a probabilidade total de saída por qualquer causa \$q_x^{(τ)}\$.
+Retorna a probabilidade total de saída por qualquer causa \$q_x^{(\\tau)}\$.
 """
 function qx(mdt::MultiDecrementTable, age::Int)::Float64
-    return qx(mdt, age, Death()) +
-        qx(mdt, age, Termination()) +
-        qx(mdt, age, Retirement()) +
-        qx(mdt, age, Disability())
+    total = sum(qx(mdt, age, d) for d in keys(mdt.rates))
+    if total > 1
+        @warn "A soma total dos decrementos na idade $(age) ultrapassa 1.0"
+        return 1.0
+    end
+    return total
 end
 
 """
@@ -106,90 +105,87 @@ function survival(mdt::MultiDecrementTable, age::Int, time::Int)::Float64
     return p
 end
 
-
 # Conversão de decrementos independentes para probabilidades decrementais utilizando hipótese
 # de Força de Mortalidade Constante.
 
 function _convert_rates(
-    q_d::Vector{Float64}, q_t::Vector{Float64},
-    q_r::Vector{Float64}, q_i::Vector{Float64},
-    ::ConstantForce
-)
-    n = length(q_d)
-    dep_d, dep_t, dep_r, dep_i = zeros(n), zeros(n), zeros(n), zeros(n)
+    rates::Dict{D, Vector{Float64}}, 
+    ::ConstantForce) where {D <: AbstractDecrement}
+    
+    dec_keys = collect(keys(rates))
+    n = length(rates[first(dec_keys)])
+    
+    # Inicializa o dicionário de saída com vetores zerados
+    converted = Dict{D, Vector{Float64}}(d => zeros(n) for d in dec_keys)
 
     @inbounds for k in 1:n
-        qd, qt, qr, qi = q_d[k], q_t[k], q_r[k], q_i[k]
-
-        # p_tau produto das sobrevivências independentes
-        p_tau = (1.0 - qd) * (1.0 - qt) * (1.0 - qr) * (1.0 - qi)
+        # Calcula p_tau para a idade k
+        p_tau = 1.0
+        for d in dec_keys
+            p_tau *= (1.0 - rates[d][k])
+        end
+        
         q_tau = 1.0 - p_tau
 
-        if q_tau > 0.0
+        if q_tau > 0.0 && p_tau > 0.0
             ln_p_tau = log(p_tau)
-            dep_d[k] = q_tau * (log(1.0 - qd) / ln_p_tau)
-            dep_t[k] = q_tau * (log(1.0 - qt) / ln_p_tau)
-            dep_r[k] = q_tau * (log(1.0 - qr) / ln_p_tau)
-            dep_i[k] = q_tau * (log(1.0 - qi) / ln_p_tau)
+            for d in dec_keys
+                q_ind = rates[d][k]
+                if q_ind < 1.0
+                    converted[d][k] = q_tau * (log(1.0 - q_ind) / ln_p_tau)
+                else
+                    # Caso de borda: taxa independente de 100%
+                    converted[d][k] = 1.0
+                end
+            end
         end
     end
-    return Dict(
-        Death() => dep_d,
-        Termination() => dep_t,
-        Retirement() => dep_r,
-        Disability() => dep_i
-    )
 
+    return converted
 end
-
-
-@inline _s1(x, y, z) = x + y + z
-@inline _s2(x, y, z) = x*y + x*z + y*z
-@inline _s3(x, y, z) = x*y*z
-
-@inline _udd_kernel(w, x, y, z) = w * (1.0 - 0.5 * _s1(x, y, z) + (1/3) * _s2(x, y, z) - 0.25 * _s3(x, y, z))
-
-@inline function _convert_4_decrements_udd(qd, qt, qr, qi)
-    dep_d = _udd_kernel(qd, qt, qr, qi)
-    dep_t = _udd_kernel(qt, qd, qr, qi)
-    dep_r = _udd_kernel(qr, qd, qt, qi)
-    dep_i = _udd_kernel(qi, qd, qt, qr)
-    return dep_d, dep_t, dep_r, dep_i
-end
-
 
 
 #Converte taxas independentes \$q'\$ em probabilidades dependentes \$q\$ via a expansão 
 #polinomial exata da integral sob a hipótese de Distribuição Uniforme de Decrementos (UDD) 
 #aplicada individualmente.
 function _convert_rates(
-    q_d::Vector{Float64}, q_t::Vector{Float64},
-    q_r::Vector{Float64}, q_i::Vector{Float64},
-    ::UDDIndividual
-)
-    n = length(q_d)
-    dep_d, dep_t, dep_r, dep_i = zeros(n), zeros(n), zeros(n), zeros(n)
+    rates::Dict{D, Vector{Float64}}, 
+    ::UDDIndividual) where {D <: AbstractDecrement}
+    
+    dec_keys = collect(keys(rates))
+    n = length(rates[first(dec_keys)])
+    converted = Dict{D, Vector{Float64}}(d => zeros(n) for d in dec_keys)
+
+    # Pontos e pesos de Quadratura de Gauss-Legendre para integral no intervalo [0, 1]
+    # Avalia a integral \int_0^1 \prod_{i \neq j} (1 - t * q'_i) dt
+    nodes = (0.5 - sqrt(15)/10, 0.5, 0.5 + sqrt(15)/10)
+    weights = (5/18, 8/18, 5/18)
 
     @inbounds for k in 1:n
-        dep_d[k], dep_t[k], dep_r[k], dep_i[k] = _convert_4_decrements_udd(
-            q_d[k], q_t[k], q_r[k], q_i[k]
-        )
+        for j_dec in dec_keys
+            q_j = rates[j_dec][k]
+            other_decs = [d for d in dec_keys if d !== j_dec]
+            
+            # Aproximação do valor da integral \int_0^1 \prod_{d \neq j} (1 - t * q'_d) dt
+            integral_val = 0.0
+            for (t, w) in zip(nodes, weights)
+                prod_others = 1.0
+                for d in other_decs
+                    prod_others *= (1.0 - t * rates[d][k])
+                end
+                integral_val += w * prod_others
+            end
+            
+            converted[j_dec][k] = q_j * integral_val
+        end
     end
 
-    return Dict(
-        Death() => dep_d,
-        Termination() => dep_t,
-        Retirement() => dep_r,
-        Disability() => dep_i
-    )
+    return converted
 end
 
 """
     MultiDecrementTable(
-    dt_death::SingleDecrementTable,
-    dt_turnover::SingleDecrementTable,
-    dt_retirement::SingleDecrementTable,
-    dt_disability::SingleDecrementTable;
+    tables::SingleDecrementTable...;
     method::ConversionMethod = UDDIndividual()
 )
 
@@ -200,47 +196,42 @@ convertendo as taxas ``q'^{(j)}_x`` em probabilidades dependentes ``q^{(j)}_x`` 
 A conversão de taxas decrementais indepentendentes para probabilidades em ambiente de múltiplos decrementos aceita dois métodos básicos.
 A Força de Mortalidade Constante também depende da hipótese UDD.
 
-- Força de Mortalidade Constante. `ConstantForce()`
+- Força de Mortalidade Constante. `ConstantForce`
 
 ```math
-    q_x^{(j)} = q_x^{s(j)}\\int_0^1\\prod_{i\\neq j}(1-tq_x^{s(j)})dt.
+    q_x^{(j)} = q_x^{(\tau)}\frac{\\log(1-q_x^{s(j)})}{\\log(1-q_x^{\tau})}.
 ```
 
 - Distribuição Uniforme de Decrementos (UDD) `UDDIndividual`
 
 ```math
-    q_x^{(j)} = q_x^{(\\tau)}\\frac{\\log(1-q_x^{s(j)})}{\\log(1-q_x^{\\tau})}.
+    q_x^{(j)} = q_x^{s(j)}\\int_0^1\\prod_{i\neq j}(1-tq_x^{s(j)})dt.
 ```
 """
 function MultiDecrementTable(
-    dt_death::SingleDecrementTable,
-    dt_turnover::SingleDecrementTable,
-    dt_retirement::SingleDecrementTable,
-    dt_disability::SingleDecrementTable;
+    tables::SingleDecrementTable...;
     method::ConversionMethod=UDDIndividual()
 )
-    ages_d = ages(dt_death)
-    if ages(dt_turnover) != ages_d || ages(dt_retirement) != ages_d || ages(dt_disability) != ages_d
-        throw(ArgumentError("Todas as MortalityTables fornecidas devem possuir exatamente o mesmo intervalo de idades."))
+    isempty(tables) && throw(ArgumentError("Forneça ao menos uma tábua de decremento."))
+
+    base_ages = ages(tables[1])
+    base_gender = gender(tables[1])
+
+    for t in tables
+        if ages(t) != base_ages
+            throw(ArgumentError("Todas as tábuas devem possuir exatamente o mesmo intervalo de idades."))
+        end
+        if gender(t) != base_gender
+            @warn "As tábuas associadas possuem gêneros distintos."
+        end
     end
 
-    if gender(dt_death) != gender(dt_turnover) || gender(dt_death) != gender(dt_retirement) || gender(dt_death) != gender(dt_disability)
-        @warn "As tábuas associadas possuem sexos/géneros distintos."
-    end
-
-    q_d = rates(dt_death)
-    q_t = rates(dt_turnover)
-    q_r = rates(dt_retirement)
-    q_i = rates(dt_disability)
-
-    converted_rates = _convert_rates(q_d, q_t, q_r, q_i, method)
+    dict_rates = Dict(t.decrement => rates(t) for t in tables)
+    converted_rates = _convert_rates(dict_rates, method)
 
     return MultiDecrementTable(
-        ages_d,
-        converted_rates[Death()],
-        converted_rates[Termination()],
-        converted_rates[Retirement()],
-        converted_rates[Disability()],
-        gender(dt_death)
+        base_ages,
+        converted_rates,
+        base_gender
     )
 end

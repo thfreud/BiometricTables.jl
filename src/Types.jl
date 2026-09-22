@@ -31,12 +31,10 @@ Base.@kwdef struct SingleDecrementTable{M<:MetaData, D <: AbstractDecrement, G <
     gender::G
 end
 
-struct MultiDecrementTable{G <: Gender} <: AbstractBiometricTable
+# trocar os campos de taxas por um dicionário
+struct MultiDecrementTable{G <: Gender, D <: AbstractDecrement} <: AbstractBiometricTable
     ages::Vector{Int}
-    mortality_probabilities::Vector{Float64}
-    turnover_probabilities::Vector{Float64}
-    retirement_probabilities::Vector{Float64}
-    disability_probabilities::Vector{Float64}
+    rates::Dict{D, Vector{Float64}}
     gender::G
 end
 
