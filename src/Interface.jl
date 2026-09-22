@@ -199,13 +199,13 @@ A Força de Mortalidade Constante também depende da hipótese UDD.
 - Força de Mortalidade Constante. `ConstantForce`
 
 ```math
-    q_x^{(j)} = q_x^{(\tau)}\frac{\\log(1-q_x^{s(j)})}{\\log(1-q_x^{\tau})}.
+    q_x^{(j)} = q_x^{(\\tau)}\\frac{\\log(1-q_x^{s(j)})}{\\log(1-q_x^{\\tau})}.
 ```
 
 - Distribuição Uniforme de Decrementos (UDD) `UDDIndividual`
 
 ```math
-    q_x^{(j)} = q_x^{s(j)}\\int_0^1\\prod_{i\neq j}(1-tq_x^{s(j)})dt.
+    q_x^{(j)} = q_x^{s(j)}\\int_0^1\\prod_{i\\neq j}(1-tq_x^{s(j)})dt.
 ```
 """
 function MultiDecrementTable(
