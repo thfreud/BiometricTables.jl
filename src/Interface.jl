@@ -20,9 +20,14 @@ end
     Retorna a probabilidade de ocorrência de saída em qualquer objeto do tipo `SingleDecrementTable`
 """
 function qx(mt::SingleDecrementTable, age::Int)::Float64
+    if age < minimum_age(mt) || age > maximum_age(mt)
+        throw(ArgumentError("Idade deve estar entre: $(minimum_age(mt)) e $(maximum_age(mt))"))
+    end
     idx = _age_index(mt, age)
     return @inbounds mt.rates[idx]
 end
+
+px(mt::SingleDecrementTable, age::Int) = 1 - qx(mt, age)
 
 """
     survival(mt::SingleDecrementTableble, age::Int, time::Int)::Float64
@@ -33,9 +38,16 @@ Retorna a probabilidade de sobrevivência ``{_t}p_x`` ao longo de `time` anos, i
 ```
 """
 function survival(mt::SingleDecrementTable, age::Int, time::Int)::Float64
-    if age+time > maximum_age(mt)
-        throw(ArgumentError("Idade + time - 1 não podem ultrapassar o horizonte da tábua: $(maximum_age(mt))"))
+    if time == 0
+        return 1.0
+    elseif time < 0
+        throw(ArgumentError("O parâmetro 'time' deve ser não negativo."))
+    elseif age < minimum_age(mt)
+        throw(ArgumentError("A idade 'age' ($age) é inferior ao limite da tábua ($(minimum_age(mt)))."))
+    elseif (age + time - 1) > maximum_age(mt)
+        return 0.0
     end
+
     p = 1.0
     for t_age in 0:(time-1)
         p *= px(mt, age + t_age)
@@ -110,6 +122,15 @@ Retorna a probabilidade de sobrevivência conjunta a todos os decrementos ao lon
 ```
 """
 function survival(mdt::MultiDecrementTable, age::Int, time::Int)::Float64
+    if time == 0
+        return 1.0
+    elseif time < 0
+        throw(ArgumentError("O parâmetro 'time' deve ser não negativo."))
+    elseif age < minimum_age(mdt)
+        throw(ArgumentError("A idade 'age' ($age) é inferior ao limite da tábua ($(minimum_age(mdt)))."))
+    elseif (age + time - 1) > maximum_age(mdt)
+        return 0.0
+    end
     p = 1.0
     for t_age in 0:(time-1)
         p *= px(mdt, age + t_age)
@@ -203,18 +224,18 @@ end
 
 Constrói uma `MultiDecrementTable` a partir de quatro tábuas de decremento único (independentes),
 convertendo as taxas ``q'^{(j)}_x`` em probabilidades dependentes ``q^{(j)}_x`` via o método especificado 
-(`UDDIndividual()` ou `ConstantForce()`).
+(`UDDIndividual` ou `ConstantForce`).
 ## Conversão de Decrementos em Probabilidades
 A conversão de taxas decrementais indepentendentes para probabilidades em ambiente de múltiplos decrementos aceita dois métodos básicos.
 A Força de Mortalidade Constante também depende da hipótese UDD.
 
-- Força de Mortalidade Constante. `ConstantForce`
+- Força de Mortalidade Constante: `ConstantForce`
 
 ```math
     q_x^{(j)} = q_x^{(\\tau)}\\frac{\\log(1-q_x^{s(j)})}{\\log(1-q_x^{\\tau})}.
 ```
 
-- Distribuição Uniforme de Decrementos (UDD) `UDDIndividual`
+- Distribuição Uniforme de Decrementos (UDD): `UDDIndividual`
 
 ```math
     q_x^{(j)} = q_x^{s(j)}\\int_0^1\\prod_{i\\neq j}(1-tq_x^{s(i)})dt.
