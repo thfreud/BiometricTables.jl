@@ -28,44 +28,65 @@ O **`BiometricTables.jl`** é um pacote em Julia projetado para catalogar, manip
 ---
 
 ## Exemplo Rápido de Uso
-
 ```julia
 using BiometricTables
+println("=== Teste de Construção e Conversão de MultiDecrementTable ===\n")
 
-# 1. Definição de Metadados e Tábua de Mortalidade
-meta = MetaData(
-    source = "IBA",
-    name = "AT-2000 Male",
-    description = "Tábua de Mortalidade Geral",
-    publication_year = 2000
-)
+# 1. Configuração dos Dados de Teste (Idades de 20 a 24)
+test_ages = 20:24
 
-ages_vec = collect(18:115)
-rates_vec = [...] # Vetor de qx
+# Taxas independentes de exemplo (q')
+q_prime_death      = [0.0010, 0.0012, 0.0015, 0.0018, 0.0020]
+q_prime_turnover   = [0.0500, 0.0400, 0.0300, 0.0200, 0.0100]
+q_prime_retirement = [0.0000, 0.0000, 0.0000, 0.0100, 0.0500]
+q_prime_disability = [0.0005, 0.0006, 0.0008, 0.0010, 0.0012]
 
-mt = SingleDecrementTable(rates_vec, ages_vec, meta, Death(), Male())
+# Instanciação das SingleDecrementTable individuais
+mock_metadata = MetaData("s", "s", "s", 2000)
+mt_d = SingleDecrementTable(collect(test_ages), q_prime_death, mock_metadata, Death(), Unisex())
+mt_t = SingleDecrementTable(collect(test_ages), q_prime_turnover, mock_metadata, Termination(), Unisex())
+mt_r = SingleDecrementTable(collect(test_ages), q_prime_retirement, mock_metadata, Retirement(), Unisex())
+mt_i = SingleDecrementTable(collect(test_ages), q_prime_disability, mock_metadata, Disability(), Unisex())
 
-# Consultas básicas
-q_30 = qx(mt, 30)          # Taxa de mortalidade aos 30 anos
-p_30 = px(mt, 30)          # Probabilidade de sobrevivência (1 - qx)
-s_10 = survival(mt, 30, 10) # Probabilidade de sobreviver por 10 anos (10_p_30)
+# 2. Construção via UDD Individual (Integração / Quadratura Genérica)
+mdt_udd = MultiDecrementTable(mt_d, mt_t, mt_r, mt_i; method = BiometricTables.UDDIndividual())
 
-# 2. Construção de Tábua de Múltiplos Decrementos
-mdt = MultiDecrementTable(
-    collect(18:75),
-    tabua_morte,
-    tabua_rotatividade,
-    tabua_aposentadoria,
-    tabua_invalidez
-)
+# 3. Construção via Constant Force (Força Constante de Decremento)
+mdt_cf = MultiDecrementTable(mt_d, mt_t, mt_r, mt_i; method = BiometricTables.ConstantForce())
 
-# Consulta por decremento específico q_x^(d)
-q_morte_30 = qx(mdt, 30, Death())
-q_inval_30 = qx(mdt, 30, Disability())
+# 4. Exibição dos Resultados Comparativos para a Idade 24
+target_age = 24
+println("Comparação para a Idade $target_age:")
+println("--------------------------------------------------")
+println("Taxas Independentes de Entrada (q'):")
+println("  Death: $(qx(mt_d, target_age)) | Turnover: $(qx(mt_t, target_age)) | Retirement: $(qx(mt_r, target_age)) | Disability: $(qx(mt_i, target_age))\n")
 
-# Probabilidade global de saída q_x^(τ) e sobrevivência conjunta p_x^(τ)
-q_total_30 = qx(mdt, 30)
-p_total_30 = px(mdt, 30)
+println("Probabilidades Dependentes Calculadas (q):")
+println("  [UDD Individual]")
+println("    q_death      = ", qx(mdt_udd, target_age, Death()))
+println("    q_turnover   = ", qx(mdt_udd, target_age, Termination()))
+println("    q_retirement = ", qx(mdt_udd, target_age, Retirement()))
+println("    q_disability = ", qx(mdt_udd, target_age, Disability()))
+println("    q_tau (Total)= ", qx(mdt_udd, target_age))
+println("    p_tau        = ", px(mdt_udd, target_age))
+
+println("\n  [Constant Force]")
+println("    q_death      = ", qx(mdt_cf, target_age, Death()))
+println("    q_turnover   = ", qx(mdt_cf, target_age, Termination()))
+println("    q_retirement = ", qx(mdt_cf, target_age, Retirement()))
+println("    q_disability = ", qx(mdt_cf, target_age, Disability()))
+println("    q_tau (Total)= ", qx(mdt_cf, target_age))
+println("    p_tau        = ", px(mdt_cf, target_age))
+
+# 5. Validação de Sobrevivência Multianual (5 anos a partir dos 20)
+p_5_udd = survival(mdt_udd, 20, 5)
+p_5_cf  = survival(mdt_cf, 20, 5)
+
+println("\n--------------------------------------------------")
+println("Sobrevivência Acumulada em 5 anos (5_p_20):")
+println("  UDD Individual: ", p_5_udd)
+println("  Constant Force: ", p_5_cf)
+println("  Diferença Absoluta: ", abs(p_5_udd - p_5_cf))
 ```
 ## Principais Funções da API
 
@@ -79,3 +100,8 @@ p_total_30 = px(mdt, 30)
 | `minimum_age(table)` / `maximum_age(table)` | Retorna a menor e a maior idade presentes na tábua. |
 | `metadata(mt)` | Retorna os metadados de uma MortalityTable. |
 
+
+## Comparação Visual de Tábuas
+
+Você pode fazer uma plotagem para comparar objetos do tipo `SingleDecrementTable` através da função `plot([obj1, obj2])` ou `plot(obj)` para um único objeto.
+Objetos do tipo `MultiDecrementTable` podem ser igualmente plotados, mas ainda não há uma assinatura para comparação de tábuas de múltiplos decrementos.
