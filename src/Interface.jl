@@ -1,16 +1,4 @@
 # --- Interface para MortalityTable ---
-"""
-    ages(mt::SingleDecrementTable)
-    minimum_age(mt::SingleDecrementTable)
-    maximum_age(mt::SingleDecrementTable)
-    metadata(mt::SingleDecrementTable)
-    decrement(mt::SingleDecrementTable)
-    rates(mt::SingleDecrementTable)
-    gender(mt::SingleDecrementTable)
-Conjunto de funções de conveniência (getters) para análise de campos e recuperação de alguns valores origundos de 
-quaiquer objetos do tipo `SingleDecrementTable`
-
-"""
 ages(mt::SingleDecrementTable) = mt.ages
 minimum_age(mt::SingleDecrementTable) = minimum(ages(mt))
 maximum_age(mt::SingleDecrementTable) = maximum(ages(mt))
@@ -18,14 +6,6 @@ metadata(mt::SingleDecrementTable) = mt.metadata
 decrement(mt::SingleDecrementTable) = mt.decrement
 rates(mt::SingleDecrementTable) = mt.rates
 gender(mt::SingleDecrementTable) = mt.gender
-
-# Associa a documentação para todas as funções do grupo
-@doc (@doc ages) minimum_age
-@doc (@doc ages) maximum_age
-@doc (@doc ages) metadata
-@doc (@doc ages) decrement
-@doc (@doc ages) rates
-@doc (@doc ages) gender
 
 @inline function _age_index(mt::SingleDecrementTable, age::Int)
     idx = age - minimum_age(mt) + 1

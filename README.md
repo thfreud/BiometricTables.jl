@@ -1,14 +1,13 @@
 # BiometricTables.jl
 
 [![Build Status](https://github.com/thfreud/BiometricTables.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/thfreud/BiometricTables.jl/actions/workflows/CI.yml?query=branch%3Amain)
-[![Coverage](https://codecov.io/gh/thfreud/BiometricTables.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/thfreud/BiometricTables.jl)
 [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
 [![Aqua QA](https://juliatesting.github.io/Aqua.jl/dev/assets/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 [![Docs (dev)](https://img.shields.io/badge/docs-dev-blue.svg)](https://thfreud.github.io/BiometricTables.jl/dev/)
 
-> **Status do Projeto:** Em desenvolvimento ativo (`WIP`). As interfaces e APIs podem sofrer alterações até o lançamento da primeira versão estável (`v0.1.0`).
+> **Status do Projeto:** Em desenvolvimento ativo (`WIP`). As interfaces e APIs podem sofrer alterações até o lançamento da primeira versão estável (`v0.1.0`). **Sua contribuição é bem-vinda!**. 
 
-O **`BiometricTables.jl`** é um pacote em Julia projetado para catalogar, manipular e consultar **tábuas biométricas atuariais**. Ele fornece estruturas de dados otimizadas e uma interface baseada em **múltiplo despacho** para gerenciar tanto tábuas de decremento único (mortalidade) quanto tábuas de múltiplos decrementos (mortalidade, invalidez, aposentadoria, desligamento/rotatividade).
+O **`BiometricTables.jl`** é um pacote em Julia projetado para catalogar, manipular e consultar **tábuas biométricas atuariais**. Ele fornece estruturas de dados otimizadas e uma interface para gerenciar tanto tábuas de decremento único (mortalidade) quanto tábuas de múltiplos decrementos (mortalidade, invalidez, aposentadoria, desligamento/rotatividade). No momento, ainda não há binários de tábuas biométricas no pacote, mas eles serão adicionados assim que a interface de manipulação estiver minimamente estável. 
 
 ---
 

@@ -23,6 +23,27 @@ Base.@kwdef struct MetaData{S<:String,J<:Int}
     publication_year::J
 end
 
+"""
+    SingleDecrementTable(ages::Vector{Int}, rates::Vector{Float64}, metadata::MetaData, decrement::AbstractDecrement, gender::Gender)
+
+Representa uma tábua biométrica de decremento único (ex: tábua de mortalidade, invalidez ou rotatividade).
+
+# Campos
+- `ages::Vector{Int}`: Vetor com o intervalo de idades coberto pela tábua.
+- `rates::Vector{Float64}`: Vetor com as taxas/probabilidades de decremento (``q_x``).
+- `metadata::M`: Metadados da tábua (nome, fonte, ano, etc.).
+- `decrement::D`: Tipo de decremento (`Death()`, `Disability()`, etc.).
+- `gender::G`: Gênero associado (`Male()`, `Female()`, `Unisex()`).
+
+# Funções de Acesso (Getters)
+As seguintes funções de conveniência estão disponíveis para consultar uma `SingleDecrementTable`:
+- `ages(mt)`: Retorna o vetor de idades.
+- `minimum_age(mt)` / `maximum_age(mt)`: Retornam os limites de idade da tábua.
+- `rates(mt)`: Retorna o vetor de taxas.
+- `decrement(mt)`: Retorna o tipo de decremento.
+- `gender(mt)`: Retorna o gênero.
+- `metadata(mt)`: Retorna os metadados.
+"""
 Base.@kwdef struct SingleDecrementTable{M<:MetaData, D <: AbstractDecrement, G <: Gender} <: AbstractBiometricTable
     ages::Vector{Int}
     rates::Vector{Float64}
