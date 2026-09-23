@@ -1,4 +1,16 @@
 # --- Interface para MortalityTable ---
+"""
+    ages(mt::SingleDecrementTable)
+    minimum_age(mt::SingleDecrementTable)
+    maximum_age(mt::SingleDecrementTable)
+    metadata(mt::SingleDecrementTable)
+    decrement(mt::SingleDecrementTable)
+    rates(mt::SingleDecrementTable)
+    gender(mt::SingleDecrementTable)
+Conjunto de funções de conveniência (getters) para análise de campos e recuperação de alguns valores origundos de 
+quaiquer objetos do tipo `SingleDecrementTable`
+
+"""
 ages(mt::SingleDecrementTable) = mt.ages
 minimum_age(mt::SingleDecrementTable) = minimum(ages(mt))
 maximum_age(mt::SingleDecrementTable) = maximum(ages(mt))
@@ -7,18 +19,30 @@ decrement(mt::SingleDecrementTable) = mt.decrement
 rates(mt::SingleDecrementTable) = mt.rates
 gender(mt::SingleDecrementTable) = mt.gender
 
+# Associa a documentação para todas as funções do grupo
+@doc (@doc ages) minimum_age
+@doc (@doc ages) maximum_age
+@doc (@doc ages) metadata
+@doc (@doc ages) decrement
+@doc (@doc ages) rates
+@doc (@doc ages) gender
+
 @inline function _age_index(mt::SingleDecrementTable, age::Int)
     idx = age - minimum_age(mt) + 1
     @boundscheck checkbounds(mt.rates, idx)
     return idx
 end
 
+"""
+    qx(mt::SingleDecrementTable, age::Int)::Float64
+    px(mt::SingleDecrementTable, age::Int)::Float64
+
+    Retorna a probabilidade de ocorrência de saída em qualquer objeto do tipo `SingleDecrementTable`
+"""
 function qx(mt::SingleDecrementTable, age::Int)::Float64
     idx = _age_index(mt, age)
     return @inbounds mt.rates[idx]
 end
-
-px(mt::SingleDecrementTable, age::Int)::Float64 = 1.0 - qx(mt, age)
 
 """
     survival(mt::SingleDecrementTableble, age::Int, time::Int)::Float64
@@ -41,7 +65,15 @@ end
 
 
 # --- Interface para MultiDecrementTable ---
+"""
+    ages(mdt::MultiDecrementTable)
+    minimum_age(mdt::MultiDecrementTable)
+    maximum_age(mdt::MultiDecrementTable)
+    gender(mdt::MultiDecrementTable)
 
+Conjunto de funções de conveniência (getters) para análise de campos e recuperação de alguns valores origundos de 
+quaiquer objetos do tipo `MultiDecrementTable`
+"""
 ages(mdt::MultiDecrementTable) = mdt.ages
 minimum_age(mdt::MultiDecrementTable) = minimum(ages(mdt))
 maximum_age(mdt::MultiDecrementTable) = maximum(ages(mdt))
@@ -109,14 +141,14 @@ end
 # de Força de Mortalidade Constante.
 
 function _convert_rates(
-    rates::Dict{D, Vector{Float64}}, 
-    ::ConstantForce) where {D <: AbstractDecrement}
-    
+    rates::Dict{D,Vector{Float64}},
+    ::ConstantForce) where {D<:AbstractDecrement}
+
     dec_keys = collect(keys(rates))
     n = length(rates[first(dec_keys)])
-    
+
     # Inicializa o dicionário de saída com vetores zerados
-    converted = Dict{D, Vector{Float64}}(d => zeros(n) for d in dec_keys)
+    converted = Dict{D,Vector{Float64}}(d => zeros(n) for d in dec_keys)
 
     @inbounds for k in 1:n
         # Calcula p_tau para a idade k
@@ -124,7 +156,7 @@ function _convert_rates(
         for d in dec_keys
             p_tau *= (1.0 - rates[d][k])
         end
-        
+
         q_tau = 1.0 - p_tau
 
         if q_tau > 0.0 && p_tau > 0.0
@@ -149,12 +181,12 @@ end
 #polinomial exata da integral sob a hipótese de Distribuição Uniforme de Decrementos (UDD) 
 #aplicada individualmente.
 function _convert_rates(
-    rates::Dict{D, Vector{Float64}}, 
-    ::UDDIndividual) where {D <: AbstractDecrement}
-    
+    rates::Dict{D,Vector{Float64}},
+    ::UDDIndividual) where {D<:AbstractDecrement}
+
     dec_keys = collect(keys(rates))
     n = length(rates[first(dec_keys)])
-    converted = Dict{D, Vector{Float64}}(d => zeros(n) for d in dec_keys)
+    converted = Dict{D,Vector{Float64}}(d => zeros(n) for d in dec_keys)
 
     # Pontos e pesos de Quadratura de Gauss-Legendre para integral no intervalo [0, 1]
     # Avalia a integral \int_0^1 \prod_{i \neq j} (1 - t * q'_i) dt
@@ -165,7 +197,7 @@ function _convert_rates(
         for j_dec in dec_keys
             q_j = rates[j_dec][k]
             other_decs = [d for d in dec_keys if d !== j_dec]
-            
+
             # Aproximação do valor da integral \int_0^1 \prod_{d \neq j} (1 - t * q'_d) dt
             integral_val = 0.0
             for (t, w) in zip(nodes, weights)
@@ -175,7 +207,7 @@ function _convert_rates(
                 end
                 integral_val += w * prod_others
             end
-            
+
             converted[j_dec][k] = q_j * integral_val
         end
     end
@@ -205,7 +237,7 @@ A Força de Mortalidade Constante também depende da hipótese UDD.
 - Distribuição Uniforme de Decrementos (UDD) `UDDIndividual`
 
 ```math
-    q_x^{(j)} = q_x^{s(j)}\\int_0^1\\prod_{i\\neq j}(1-tq_x^{s(j)})dt.
+    q_x^{(j)} = q_x^{s(j)}\\int_0^1\\prod_{i\\neq j}(1-tq_x^{s(i)})dt.
 ```
 """
 function MultiDecrementTable(
