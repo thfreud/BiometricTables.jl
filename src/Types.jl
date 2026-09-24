@@ -16,11 +16,11 @@ struct Disability <: AbstractDecrement end
 struct Termination <: AbstractDecrement end
 struct Retirement <: AbstractDecrement end
 
-Base.@kwdef struct MetaData{S<:String,J<:Int}
-    source::S
-    name::S
-    description::S
-    publication_year::J
+Base.@kwdef struct MetaData
+    source::Union{String, Nothing} = nothing
+    name::Union{String, Nothing} = nothing
+    description::Union{String, Nothing} = nothing
+    publication_year::Union{Int, Nothing} = nothing
 end
 
 """

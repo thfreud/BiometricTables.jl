@@ -1,7 +1,7 @@
 module BiometricTables
 
 export px, qx, survival, ages, 
-minimum_age, maximum_age, metadata, 
+minimum_age, maximum_age, metadata, rates,
 MultiDecrementTable, SingleDecrementTable, MetaData, gender, Death, Termination, Disability, Retirement, Male, Female, Unisex
 
 include("Types.jl")
